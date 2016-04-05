@@ -37,8 +37,8 @@ Assuming you're trying to get the annotations backend up and running for the fir
 The below file will setup a `launchd` configuration and launch the API using sqlite3 as storage engine - for a minimal dependency footprint.
 
 ```
-sudo mkdir -p /var/run/rra.kapeli/
-sudo chown $(whoami) /var/run/rra.kapeli/
+sudo mkdir -p /usr/local/var/run/rra.kapeli
+sudo chown $(whoami) /usr/local/var/run/rra.kapeli
 $GOPATH/src/github.com/nicolai86/dash-annotations/bin/migrate --driver=sqlite3 --datasource="$HOME/Library/dash-annotations/dash.sqlite3"
 ```
 
@@ -49,7 +49,7 @@ cat <<EOF > $HOME/Library/LaunchAgents/rra.kapeli.annotations.plist
 <plist version="1.0">
 <dict>
   <key>KeepAlive</key>
-  <true/>
+  <false/>
   <key>Label</key>
   <string>rra.kapeli.annotations</string>
   <key>ProgramArguments</key>
@@ -58,16 +58,25 @@ cat <<EOF > $HOME/Library/LaunchAgents/rra.kapeli.annotations.plist
     <string>--driver=sqlite3</string>
     <string>--datasource=$HOME/Library/dash-annotations/dash.sqlite3</string>
     <string>--session.secret=1234123412341234</string>
-    <string>--listen=127.0.0.1:54111</string>
   </array>
-  <key>RunAtLoad</key>
-  <true/>
+  <key>Sockets</key>
+  <dict>
+    <key>DashSocket</key>
+    <dict>
+      <key>SockServiceName</key>
+      <string>54111</string>
+      <key>SockType</key>
+      <string>stream</string>
+      <key>SockFamily</key>
+      <string>IPv4</string>
+    </dict>
+  </dict>
   <key>WorkingDirectory</key>
-  <string>/var/run/rra.kapeli</string>
+  <string>/usr/local/var/run/rra.kapeli</string>
   <key>StandardOutPath</key>
-  <string>/var/run/rra.kapeli/stdout</string>
+  <string>/usr/local/var/run/rra.kapeli/stdout</string>
   <key>StandardErrorPath</key>
-  <string>/var/run/rra.kapeli/stderr</string>
+  <string>/usr/local/var/run/rra.kapeli/stderr</string>
 </dict>
 </plist>
 EOF

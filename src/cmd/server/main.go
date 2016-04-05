@@ -57,17 +57,17 @@ func (ca *ContextAdapter) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func main() {
-	var mux = http.DefaultServeMux
+var mux = http.DefaultServeMux
+var listen string
 
+func init() {
 	var (
 		driverName string
 		dataSource string
-		listen     string
 	)
 	flag.StringVar(&driverName, "driver", "mysql", "database driver to use. see github.com/rubenv/sql-migrate for details.")
 	flag.StringVar(&dataSource, "datasource", "", "datasource to be used with the database driver. mysql/pg REVDSN")
-	flag.StringVar(&listen, "listen", ":8000", "interface & port to listen on")
+	flag.StringVar(&listen, "listen", "", "interface & port to listen on")
 	flag.StringVar(&encryptionKey, "session.secret", "1234567812345678", "secret used to encrypt sessions. must have either 16, 24 or 32 bytes length")
 	flag.Parse()
 
@@ -80,7 +80,6 @@ func main() {
 	if err != nil {
 		log.Panicf("failed to connect to database")
 	}
-	defer db.Close()
 
 	var userStorage = &sqlUserStorage{db: db}
 	var rootContext = context.WithValue(NewRootContext(db), UserStoreKey, userStorage)
@@ -173,7 +172,4 @@ func main() {
 		ctx:     rootContext,
 		handler: Authenticated(WithTeam(ContextHandlerFunc(TeamListMember))),
 	})
-
-	log.Printf("Listening on %q", listen)
-	http.ListenAndServe(listen, logHandler(jsonHandler(mux)))
 }
